@@ -33,7 +33,7 @@ class Agent:
 	# states are defined as 64 discrete numbers
 	states = np.linspace(0,63,64)
 	
-	def __init__(self, width, height, moveset='normal'):
+	def __init__(self):
 		"""Declare agent variables."""
 		pass
 
@@ -42,9 +42,9 @@ class Agent:
 		run once, in experiment
 		Initialize agent variables.
 		"""
-		self.Q = {(state, action): 0 for state in self.states for action in self.actions}
+		self.Q = {(state, action): 0 for state in self.states+[-1] for action in self.actions}
 		self.model = {}
-		observedStates= {}
+		self.observedStates= {}
 
 	def agent_start(self, state):
 		"""
@@ -77,7 +77,6 @@ class Agent:
 		alpha = self.stepSize
 		R = reward
 		self.Q[(S,A)] += alpha*(R + max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
-		
 		# update observed states
 		if S not in self.observedStates:
 			self.observedStates[S] = []
@@ -86,7 +85,7 @@ class Agent:
 		
 		# update model
 		self.model[(S,A)] = (R,Sp)
-
+		
 		# plan
 		self.plan(reward)
 
@@ -106,10 +105,9 @@ class Agent:
 		# perform update
 		S = self.lastState
 		A = self.lastAction
-		Sp = state
 		alpha = self.stepSize
 		R = reward
-		self.Q[(S,A)] += alpha*(R + max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
+		self.Q[(S,A)] += alpha*(R - self.Q[(S,A)])
 		
 		# update observed states
 		if S not in self.observedStates:
@@ -118,7 +116,7 @@ class Agent:
 			self.observedStates[S].append(A)
 		
 		# update model
-		self.model[(S,A)] = (R,Sp)
+		self.model[(S,A)] = (R,-1)
 
 		# plan
 		self.plan(reward)
@@ -138,8 +136,10 @@ class Agent:
 			# choose random action
 			return np.random.choice(self.actions)
 		else: # prob 1-ep
-			# choose best action
-			return max(self.actions, key=lambda x: self.Q[(state,x)])
+			# choose best action with random tie breaking
+			maxQ = max([self.Q[(state,a)] for a in self.actions])
+			maxAs = [a for a in self.actions if self.Q[(state,a)] == maxQ]
+			return np.random.choice(maxAs)
 
 	def plan(self, reward):
 		for _ in range(self.planningSteps):

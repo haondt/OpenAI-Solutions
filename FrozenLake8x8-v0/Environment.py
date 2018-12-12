@@ -14,7 +14,7 @@ class Environment:
 	env = None
 	render = None
 
-	def __init__(self, width, height):
+	def __init__(self):
 		"""
 		(run on initialization)
 		Declare environment variables.
