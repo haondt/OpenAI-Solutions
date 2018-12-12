@@ -4,13 +4,15 @@
 
 # Modified by Noah Burghardt
 import numpy as np
-
+import gym
 class Environment:
 	"""
 	Defines the interface of an RLGlue environment
 
 	ie. These methods must be defined in your own environment classes
 	"""
+	env = None
+	render = None
 
 	def __init__(self, width, height):
 		"""
@@ -24,8 +26,8 @@ class Environment:
 		Initialize environment variables.
 		(run once in experiment)
 		"""
-		pass
-
+		self.env = gym.make('FrozenLake8x8-v0')
+	
 	def env_start(self):
 		"""
 		(run at the beginning of each episode)
@@ -35,7 +37,7 @@ class Environment:
 		Returns:
 			The first state observation from the environment.
 		"""
-		return None
+		return self.env.reset()
 
 	def env_step(self, action):
 		"""
@@ -48,7 +50,12 @@ class Environment:
 			(float, state, Boolean): a tuple of the reward, state observation,
 				and boolean indicating if it's terminal.
 		"""
-		return None
+		if self.render:
+			self.env.render()
+		
+		obs, reward, terminal, info = self.env.step(action)
+		
+		return reward, obs, terminal
 
 	def env_message(self, message):
 		"""
@@ -58,4 +65,7 @@ class Environment:
 		Returns:
 		   str: the environment's response to the message (optional)
 		"""
-		pass
+		if message == 'renderON':
+			self.render = True
+		elif message == 'renderOFF':
+			self.render = False
