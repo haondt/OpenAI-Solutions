@@ -14,13 +14,14 @@ class Agent:
 	ie. These methods must be defined in your own Agent classes
 	"""
 
-	planningSteps = 1
+	planningSteps = 5
 	lastState = None
 	lastAction = None
 	Q = None
 	model = None
 	epsilon = 0.1
-	stepSize = 0.5
+	stepSize = 0.1
+	gamma = 0.95
 	observedStates = None
 	
 	# actions are defined as
@@ -42,8 +43,8 @@ class Agent:
 		run once, in experiment
 		Initialize agent variables.
 		"""
-		self.Q = {(state, action): 0 for state in self.states+[-1] for action in self.actions}
-		self.model = {}
+		self.Q = {(state, action): 0 for state in np.append(self.states,[-1,-2]) for action in self.actions}
+		self.model = {(state,action):{} for state in self.states for action in self.actions}
 		self.observedStates= {}
 
 	def agent_start(self, state):
@@ -76,7 +77,7 @@ class Agent:
 		Sp = state
 		alpha = self.stepSize
 		R = reward
-		self.Q[(S,A)] += alpha*(R + max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
+		self.Q[(S,A)] += alpha*(R + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
 		# update observed states
 		if S not in self.observedStates:
 			self.observedStates[S] = []
@@ -84,11 +85,14 @@ class Agent:
 			self.observedStates[S].append(A)
 		
 		# update model
-		self.model[(S,A)] = (R,Sp)
+		if (R, Sp) not in self.model[(S,A)]:
+			self.model[(S,A)][(R,Sp)] = 0
+		self.model[(S,A)][(R,Sp)] += 1
 		
 		# plan
 		self.plan(reward)
 
+		#print(self.lastState, self.lastAction, state)
 		# set up for next step
 		self.lastAction = self.epGreedy(state)
 		self.lastState = state
@@ -102,6 +106,8 @@ class Agent:
 			reward (float): the reward the agent received for entering the
 				terminal state.
 		"""
+		#print(self.lastState, self.lastAction, -1)
+		#input()
 		# perform update
 		S = self.lastState
 		A = self.lastAction
@@ -116,7 +122,12 @@ class Agent:
 			self.observedStates[S].append(A)
 		
 		# update model
-		self.model[(S,A)] = (R,-1)
+		# state -1 = goal
+		# state -2 = hole
+		if (R, R-1) not in self.model[(S,A)]:
+			self.model[(S,A)][(R,R-1)] = 0
+		self.model[(S,A)][(R,R-1)] += 1
+		
 
 		# plan
 		self.plan(reward)
@@ -145,5 +156,9 @@ class Agent:
 		for _ in range(self.planningSteps):
 			S = self.lastState
 			A = np.random.choice(self.observedStates[S])
-			R, Sp = self.model[(S,A)]
-			self.Q[(S,A)] += self.stepSize*(reward + max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
+			# find most common state
+			print(self.model[(S,A)])
+			input()
+			R, Sp = max(list(self.model[(S,A)].keys()), key=lambda x: self.model[(S,A)][x])
+			
+			self.Q[(S,A)] += self.stepSize*(reward + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])

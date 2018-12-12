@@ -29,8 +29,10 @@ def main():
 			reward, state, action, terminal = rlglue.rl_step()
 		rewards.append(reward)
 		if ep >= 99:
-			if np.average(rewards[ep-99:ep+1]) > 0.78:
+			if np.average(rewards[ep-99:ep+1]) >  0.78:
 				print('solved at episode %d' % ep+1)
+			else:
+				print(ep, reward)
 
 if __name__ == '__main__':
 	main()
