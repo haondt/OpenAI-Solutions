@@ -3,8 +3,7 @@
 # https://sites.google.com/a/rl-community.org/rl-glue/Home?authuser=0
 # Modified by Noah Burghardt
 
-# Implementation of the Tabular Dyna-Q agent defined in Chapter 8 
-# of Sutton and Barto
+# Q-learning
 import numpy as np
 
 class Agent:
@@ -14,16 +13,11 @@ class Agent:
 	ie. These methods must be defined in your own Agent classes
 	"""
 
-	planningSteps = 5
-	lastState = None
-	lastAction = None
-	Q = None
-	model = None
 	epsilon = 0.1
-	stepSize = 0.1
-	gamma = 0.95
-	observedStates = None
-	
+	Q = None
+	alpha = 0.5
+	gamma = 0.9
+
 	# actions are defined as
 	# 0: left
 	# 1: down
@@ -43,9 +37,7 @@ class Agent:
 		run once, in experiment
 		Initialize agent variables.
 		"""
-		self.Q = {(state, action): 0 for state in np.append(self.states,[-1,-2]) for action in self.actions}
-		self.model = {(state,action):{} for state in self.states for action in self.actions}
-		self.observedStates= {}
+		self.Q = {(state, action): 0 for state in self.states for action in self.actions}
 
 	def agent_start(self, state):
 		"""
@@ -75,25 +67,9 @@ class Agent:
 		S = self.lastState
 		A = self.lastAction
 		Sp = state
-		alpha = self.stepSize
 		R = reward
-		self.Q[(S,A)] += alpha*(R + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
-		# update observed states
-		if S not in self.observedStates:
-			self.observedStates[S] = []
-		if A not in self.observedStates[S]:
-			self.observedStates[S].append(A)
 		
-		# update model
-		if (R, Sp) not in self.model[(S,A)]:
-			self.model[(S,A)][(R,Sp)] = 0
-		self.model[(S,A)][(R,Sp)] += 1
-		
-		# plan
-		self.plan(reward)
-
-		#print(self.lastState, self.lastAction, state)
-		# set up for next step
+		self.Q[(S,A)] += self.alpha*(R + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
 		self.lastAction = self.epGreedy(state)
 		self.lastState = state
 		
@@ -111,26 +87,9 @@ class Agent:
 		# perform update
 		S = self.lastState
 		A = self.lastAction
-		alpha = self.stepSize
 		R = reward
-		self.Q[(S,A)] += alpha*(R - self.Q[(S,A)])
+		self.Q[(S,A)] += self.alpha*(R - self.Q[(S,A)])
 		
-		# update observed states
-		if S not in self.observedStates:
-			self.observedStates[S] = []
-		if A not in self.observedStates[S]:
-			self.observedStates[S].append(A)
-		
-		# update model
-		# state -1 = goal
-		# state -2 = hole
-		if (R, R-1) not in self.model[(S,A)]:
-			self.model[(S,A)][(R,R-1)] = 0
-		self.model[(S,A)][(R,R-1)] += 1
-		
-
-		# plan
-		self.plan(reward)
 
 	def agent_message(self, message):
 		"""
@@ -152,13 +111,3 @@ class Agent:
 			maxAs = [a for a in self.actions if self.Q[(state,a)] == maxQ]
 			return np.random.choice(maxAs)
 
-	def plan(self, reward):
-		for _ in range(self.planningSteps):
-			S = self.lastState
-			A = np.random.choice(self.observedStates[S])
-			# find most common state
-			print(self.model[(S,A)])
-			input()
-			R, Sp = max(list(self.model[(S,A)].keys()), key=lambda x: self.model[(S,A)][x])
-			
-			self.Q[(S,A)] += self.stepSize*(reward + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
