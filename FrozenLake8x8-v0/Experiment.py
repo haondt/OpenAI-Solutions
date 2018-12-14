@@ -29,7 +29,7 @@ def main():
 		while not terminal:
 		
 			reward, state, action, terminal = rlglue.rl_step()
-			if ep > 10000:
+			if ep > 1000:
 				rlglue.rl_env_message('renderON')
 				print(state)
 				time.sleep(0.1)

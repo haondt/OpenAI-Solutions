@@ -67,12 +67,13 @@ class Agent:
 		S = self.lastState
 		A = self.lastAction
 		Sp = state
+		Ap = self.epGreedy(Sp)
 		R = reward
-		
-		self.Q[(S,A)] += self.alpha*(R + self.gamma*max([self.Q[(Sp, a)] for a in self.actions]) - self.Q[(S,A)])
-		self.lastAction = self.epGreedy(state)
+		self.Q[(S,A)] += self.alpha*(R + self.gamma*self.Q[(Sp, Ap)] - self.Q[(S,A)])
+		self.lastAction = Ap
 		self.lastState = state
 		
+		print(R, self.Q[(S,A)])
 		return self.lastAction
 	
 	def agent_end(self, reward):
@@ -89,8 +90,8 @@ class Agent:
 		A = self.lastAction
 		R = reward
 		self.Q[(S,A)] += self.alpha*(R - self.Q[(S,A)])
-		
-
+		print(R, self.Q[(S,A)])
+		input()
 	def agent_message(self, message):
 		"""
 		receive a message from rlglue
