@@ -1,0 +1,110 @@
+# Agent
+# Based off the agent define in the RLGlue Software
+# https://sites.google.com/a/rl-community.org/rl-glue/Home?authuser=0
+# Modified by Noah Burghardt
+
+# Q-learning
+import numpy as np
+import random
+class Agent:
+	"""
+	Defines the interface of an RLGlue Agent
+
+	ie. These methods must be defined in your own Agent classes
+	"""
+
+	epsilon = 0.1
+	Q = None
+	alpha = 0.5
+	gamma = 0.9
+
+	actions = [(x,y,z)
+				for x in range(2)
+				for y in range(2)
+				for z in range(5)
+					]
+	states = [i for i in range(6)]
+	
+	def __init__(self):
+		"""Declare agent variables."""
+		pass
+
+	def agent_init(self):
+		"""
+		run once, in experiment
+		Initialize agent variables.
+		"""
+		self.Q = {(state, action): 0 for state in self.states for action in self.actions}
+
+	def agent_start(self, state):
+		"""
+		run at the beginning of an episode
+		The first method called when the experiment starts, called after
+		the environment starts.
+		Args:
+			state (state observation): The agent's current state
+
+		Returns:
+			The first action the agent takes.
+		"""
+		self.lastState = state
+		self.lastAction = self.epGreedy(state)
+		return self.lastAction
+
+	def agent_step(self, reward, state):
+		"""
+		A step taken by the agent.
+		Args:
+			reward (float): the reward received for taking the last action taken
+			state (state observation): The agent's current state
+		Returns:
+			The action the agent is taking.
+		"""
+		# perform update
+		S = self.lastState
+		A = self.lastAction
+		Sp = state
+		Ap = self.epGreedy(Sp)
+		R = reward
+		self.Q[(S,A)] += self.alpha*(R + self.gamma*self.Q[(Sp, Ap)] - self.Q[(S,A)])
+		self.lastAction = Ap
+		self.lastState = state
+		
+		print(R, self.Q[(S,A)])
+		return self.lastAction
+	
+	def agent_end(self, reward):
+		"""
+		Run when the agent terminates.
+		Args:
+			reward (float): the reward the agent received for entering the
+				terminal state.
+		"""
+		#print(self.lastState, self.lastAction, -1)
+		#input()
+		# perform update
+		S = self.lastState
+		A = self.lastAction
+		R = reward
+		self.Q[(S,A)] += self.alpha*(R - self.Q[(S,A)])
+	def agent_message(self, message):
+		"""
+		receive a message from rlglue
+		args:
+			message (str): the message passed
+		returns:
+			str : the agent's response to the message (optional)
+		"""
+		pass
+
+	def epGreedy(self, state):
+		if np.random.rand() < self.epsilon: # prob ep
+			# choose random action
+			return random.choice(self.actions)
+		else: # prob 1-ep
+			# choose best action with random tie breaking
+			maxQ = max([self.Q[(state,a)] for a in self.actions])
+			maxAs = [a for a in self.actions if self.Q[(state,a)] == maxQ]
+			
+			return random.choice(maxAs)
+
