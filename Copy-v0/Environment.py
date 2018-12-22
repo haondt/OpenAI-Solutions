@@ -27,7 +27,6 @@ class Environment:
 		(run once in experiment)
 		"""
 		self.env = gym.make('Copy-v0')
-	
 	def env_start(self):
 		"""
 		(run at the beginning of each episode)
@@ -37,7 +36,11 @@ class Environment:
 		Returns:
 			The first state observation from the environment.
 		"""
-		return self.env.reset()
+		x = self.env.reset()
+		if self.render:
+			self.env.render()
+
+		return x
 
 	def env_step(self, action):
 		"""
@@ -49,11 +52,11 @@ class Environment:
 		Returns:
 			(float, state, Boolean): a tuple of the reward, state observation,
 				and boolean indicating if it's terminal.
-		"""
+		"""	
+		obs, reward, terminal, info = self.env.step(action)
+		
 		if self.render:
 			self.env.render()
-		
-		obs, reward, terminal, info = self.env.step(action)
 		
 		return reward, obs, terminal
 
@@ -69,3 +72,5 @@ class Environment:
 			self.render = True
 		elif message == 'renderOFF':
 			self.render = False
+		elif message == 'close':
+			self.env.close()

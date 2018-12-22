@@ -3,7 +3,7 @@
 # https://sites.google.com/a/rl-community.org/rl-glue/Home?authuser=0
 # Modified by Noah Burghardt
 
-# Q-learning
+# Monte Carlo
 import numpy as np
 import random
 class Agent:
@@ -15,16 +15,19 @@ class Agent:
 
 	epsilon = 0.1
 	Q = None
+	Returns = None
+	S = []
+	R = []
+	A = []
+	pi = {}
 	alpha = 0.5
 	gamma = 0.9
-
 	actions = [(x,y,z)
 				for x in range(2)
 				for y in range(2)
 				for z in range(5)
 					]
 	states = [i for i in range(6)]
-	
 	def __init__(self):
 		"""Declare agent variables."""
 		pass
@@ -35,7 +38,9 @@ class Agent:
 		Initialize agent variables.
 		"""
 		self.Q = {(state, action): 0 for state in self.states for action in self.actions}
-
+		self.Returns = {(state, action): [] for state in self.states for action in self.actions}
+		self.pi = {(action, state): [] for state in self.states for action in self.actions}
+	
 	def agent_start(self, state):
 		"""
 		run at the beginning of an episode
@@ -47,9 +52,13 @@ class Agent:
 		Returns:
 			The first action the agent takes.
 		"""
-		self.lastState = state
-		self.lastAction = self.epGreedy(state)
-		return self.lastAction
+		# start episode
+		action = self.epGreedy(state)
+		
+		self.S = [state]
+		self.A = [action]
+		self.R = [0]
+		return action
 
 	def agent_step(self, reward, state):
 		"""
@@ -60,18 +69,15 @@ class Agent:
 		Returns:
 			The action the agent is taking.
 		"""
-		# perform update
-		S = self.lastState
-		A = self.lastAction
-		Sp = state
-		Ap = self.epGreedy(Sp)
-		R = reward
-		self.Q[(S,A)] += self.alpha*(R + self.gamma*self.Q[(Sp, Ap)] - self.Q[(S,A)])
-		self.lastAction = Ap
-		self.lastState = state
-		
-		print(R, self.Q[(S,A)])
-		return self.lastAction
+
+		# Generate episode	
+		action = self.epGreedy(state)
+
+		self.R.append(reward)
+		self.S.append(state)
+		self.A.append(action)
+
+		return action
 	
 	def agent_end(self, reward):
 		"""
@@ -80,13 +86,28 @@ class Agent:
 			reward (float): the reward the agent received for entering the
 				terminal state.
 		"""
-		#print(self.lastState, self.lastAction, -1)
-		#input()
-		# perform update
-		S = self.lastState
-		A = self.lastAction
-		R = reward
-		self.Q[(S,A)] += self.alpha*(R - self.Q[(S,A)])
+		# finish off episode
+		self.R.append(reward)
+
+		G = 0
+		# find index of terminal state
+		T = len(self.R)-1
+
+		for t in range(T-1,-1,-1):
+			G = self.gamma*G + self.R[t+1]
+			if not (self.S[t] in self.S[0:t] and self.A[t] in self.A[0:t]):
+				self.Returns[(self.S[t], self.A[t])].append(G)
+				self.Q[(self.S[t], self.A[t])] = np.average(self.Returns[(self.S[t], self.A[t])])
+				
+				maxQ = max([self.Q[(self.S[t],a)] for a in self.actions])
+				Astar = random.choice([a for a in self.actions if self.Q[(self.S[t], a)] == maxQ])
+
+				for a in self.actions:
+					if a == Astar:
+						self.pi[(a,self.S[t])] = 1 - self.epsilon + self.epsilon/len(self.actions)
+					else:
+						self.pi[(a,self.S[t])] = self.epsilon/len(self.actions)
+
 	def agent_message(self, message):
 		"""
 		receive a message from rlglue
@@ -95,16 +116,17 @@ class Agent:
 		returns:
 			str : the agent's response to the message (optional)
 		"""
-		pass
-
+		if message == 'policy':
+			policy = {}
+			for state in self.states:
+				policy[state] = max(self.actions, key=lambda x: self.pi[(x,state)])
+			return policy
+	
 	def epGreedy(self, state):
-		if np.random.rand() < self.epsilon: # prob ep
-			# choose random action
+		if np.random.random() > self.epsilon:
+			maxQ = max([self.pi[(a,state)] for a in self.actions])
+			actions = [a for a in self.actions if self.pi[(a,state)] == maxQ]
+			achoice = np.random.choice(list(range(len(actions))))
+			return actions[achoice]
+		else:
 			return random.choice(self.actions)
-		else: # prob 1-ep
-			# choose best action with random tie breaking
-			maxQ = max([self.Q[(state,a)] for a in self.actions])
-			maxAs = [a for a in self.actions if self.Q[(state,a)] == maxQ]
-			
-			return random.choice(maxAs)
-
