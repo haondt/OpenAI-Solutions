@@ -1,0 +1,5 @@
+Solution to the MountainCar-v0 environment with a TD(0) agent and tile-coding features.
+
+The solution is found when the agent is able to achieve an average reward of over -110 over 100 episodes. The experiment and agent scripts are designed such that the agent can be injected with a stepsize parameter. This allows multiple runs to be made in order to find the best stepsize. With a stepsize of 0.559184/8, with 8 being the number of tilings for the tile-coding features. With these parameters the agent is able to solve the environment in as little as 157 episodes.
+
+The agent is based off the one described in Sutton and Barto's textbook, [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) and the rlglue software and design patterns are from Brian Tanner and Adam White's [RL-Glue project](https://sites.google.com/a/rl-community.org/rl-glue/Home?authuser=0). The [tile-coding software](http://incompleteideas.net/rlai.cs.ualberta.ca/RLAI/RLtoolkit/tiles.html) is by Richard Sutton.
