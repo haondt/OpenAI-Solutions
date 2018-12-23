@@ -21,7 +21,7 @@ class Agent:
 	A = []
 	pi = {}
 	alpha = 0.5
-	gamma = 0.9
+	gamma = 1
 	actions = [(x,y,z)
 				for x in range(2)
 				for y in range(2)
