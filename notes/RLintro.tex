@@ -30,12 +30,12 @@
 \title{Notes}
 \begin{document}
 \maketitle
-A collection of notes from the textbook, 
+A collection of notes derived from the book, 
 \textit{Reinforcement Learning} by Richard Sutton and Andrew Barto.
 Available at \url{http://incompleteideas.net/book/the-book.html}
 
 \section{Action selection}
-Most RL methods require some form of policy or action-value based action selection alogrithm.
+Most RL methods require some form of policy or action-value based action selection method.
 \begin{itemize}
 \item\textbf{Greedy Selection}: Choosing the best action.
 \[A = \text{argmax}_aQ(a) \]
@@ -64,6 +64,7 @@ Where:
 \end{itemize}
 
 \section{Performance Measures}
+Methods for comparing the performance of different parameters and algorithms.
 \begin{itemize}
 \item\textbf{Optimal Action \%}: Requires knowledge of the workings of the environment 
 	and whether the action was optimal. Plot \% over steps.
@@ -78,6 +79,7 @@ Where:
 \end{itemize}
 
 \section{Algorithms}
+Reinforcement learning algorithms covered by the book.
 \begin{itemize}
 	\item\textbf{Dynamic Programming / Value Iteration}: Updating state values by sweeping through all states.
 		Computationally expensive, especially on large state spaces.
