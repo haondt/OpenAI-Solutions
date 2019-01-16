@@ -1,0 +1,43 @@
+\documentclass[12pt]{article}
+\nonstopmode
+\usepackage[a4paper, left=1in, top=1in, right=1in, bottom=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\begin{document}
+
+A collection of notes from the textbook, 
+\textit{Reinforcement Learning} by Richard Sutton and Andrew Barto.
+Available at \url{http://incompleteideas.net/book/the-book.html}
+
+\section{Action selection}
+Most RL methods require some form of policy or action-value based action selection alogrithm.
+\begin{itemize}
+\item\textbf{Greedy Selection}: Choosing the best action.
+\[A = \text{argmax}_aQ(a) \]
+
+\item$\boldsymbol\varepsilon$\textbf{-greedy Selection}: Simple exploration with $\varepsilon$-probability.
+\[
+	A\leftarrow
+	\begin{cases}
+		\text{argmax}_aQ(a) & \text{with probability 1 - $\varepsilon$ (breaking ties randomly)} \\
+		\text{a random action} & \text{with probability } \varepsilon
+	\end{cases}
+\]
+\item\textbf{Upper Confidence Bound (UCB)}: Takes into account the proximity of the estimate to being maximal and the uncertanty in the estimates. Does not perform well on large state spaces.
+\[
+	A_t=\underset{a}{\text{argmax}} 
+	\left[
+		Q_t(a) + c \sqrt{\frac{\ln{t}}{N_t(a)}}\;
+	\right]
+\]
+Where:
+	\begin{itemize}
+		\item $c > 0$ is the degree of exploration
+		\item $N_t(a)$ is the number of times that action $a$ has been selected prior to time $t$.
+			If $N_t(a)=0$, then $a$ is considered to be a maximizing action.
+	\end{itemize}
+\end{itemize}
+
+\section{Performance Measures}
+
+\end{document}
