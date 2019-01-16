@@ -3,8 +3,33 @@
 \usepackage[a4paper, left=1in, top=1in, right=1in, bottom=1in]{geometry}
 \usepackage{amsmath}
 \usepackage{hyperref}
-\begin{document}
+\usepackage{listings}
+\usepackage{color}
 
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+ \lstdefinestyle{mystyle}{
+	     backgroundcolor=\color{backcolour},
+		 numberstyle=\tiny\color{codegray},
+		 numbers=left,
+		 escapeinside={(*}{*)},
+		 tabsize=2,
+		 basicstyle=\linespread{1.1}\ttfamily,
+		 xleftmargin-0.7cm,
+		 frame=tlbr,
+		 framesep=0.2cm,
+		 framerule=0pt
+ }
+		 
+
+
+\lstset{style=mystyle}
+\title{Notes}
+\begin{document}
+\maketitle
 A collection of notes from the textbook, 
 \textit{Reinforcement Learning} by Richard Sutton and Andrew Barto.
 Available at \url{http://incompleteideas.net/book/the-book.html}
@@ -39,5 +64,40 @@ Where:
 \end{itemize}
 
 \section{Performance Measures}
+\begin{itemize}
+\item\textbf{Optimal Action \%}: Requires knowledge of the workings of the environment 
+	and whether the action was optimal. Plot \% over steps.
+
+\item\textbf{Average reward}: Simply plot the average reward over steps.
+	Good for comparing specific implementation of agent in specific implementation of environment.
+
+\item\textbf{Average reward w.r.t. parameter}: Plot the average reward over first n=1000 steps 
+	against input parameter(s) ($\varepsilon$, $\alpha$, $c$, $Q_0$ etc) on a logarithmic scale.
+	Good for comparing learning algorithms' general effectiveness and finding the best parameter value.
+
+\end{itemize}
+
+\section{Algorithms}
+\begin{itemize}
+	\item\textbf{Dynamic Programming / Value Iteration}: Updating state values by sweeping through all states.
+		Computationally expensive, especially on large state spaces.
+		\begin{lstlisting}
+Parameters:
+	a small threshold (*$\theta$*) > 0 
+	Initialize (*$V(s) \;\; \forall s \in S^+$*) arbitrarily, except that
+	(*$V(terminal)=0$*) 
+
+Loop:
+	(*$\Delta\leftarrow 0$*)
+	Loop for each (*$s \in S^+$*):
+		(*$v\leftarrow V(s)$*)
+		(*$V(s) \leftarrow \text{max}_a \sum_{s',r} p(s',r|s,a)\left[r+\gamma V(s')\right]$*)
+		(*$\Delta\leftarrow\text{max}(\Delta,|v-V(s)|)$*)
+until (*$\Delta < \theta$*)
+
+Output a deterministic policy (*$\pi$*), such that
+	(*$\pi (s) = \text{argmax}_a \sum_{s',r}p(s',r|s,a)\left[ r+\gamma V(s')\right]$*)
+		\end{lstlisting}
+\end{itemize}
 
 \end{document}
