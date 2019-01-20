@@ -76,6 +76,10 @@ Methods for comparing the performance of different parameters and algorithms.
 	against input parameter(s) ($\varepsilon$, $\alpha$, $c$, $Q_0$ etc) on a logarithmic scale.
 	Good for comparing learning algorithms' general effectiveness and finding the best parameter value.
 
+\item\textbf{Mean Square Error}: Plot the mean square error (averaged over n=100 runs) of the value of 
+	a single state (error = actual-estimate) over the number of episodes run before acheiving the 
+	estimate, with the episodes on a logarithmic scale. Good for Monte Carlo method, where you can form 
+	an estimate of a single state without forming an estimate of the others.
 \end{itemize}
 
 \section{Algorithms}
@@ -83,7 +87,7 @@ Reinforcement learning algorithms covered by the book.
 \begin{itemize}
 	\item\textbf{Dynamic Programming / Value Iteration}: Updating state values by sweeping through all states.
 		Computationally expensive, especially on large state spaces.
-		\begin{lstlisting}
+	\begin{lstlisting}
 Parameters:
 	a small threshold (*$\theta$*) > 0 
 	Initialize (*$V(s) \;\; \forall s \in S^+$*) arbitrarily, except that
@@ -100,6 +104,31 @@ until (*$\Delta < \theta$*)
 Output a deterministic policy (*$\pi$*), such that
 	(*$\pi (s) = \text{argmax}_a \sum_{s',r}p(s',r|s,a)\left[ r+\gamma V(s')\right]$*)
 		\end{lstlisting}
+
+	\item\textbf{Off-policy Monte Carlo control}: Using a soft policy to explore, while estimating the
+		optimal policy. Does not bootstrap, i.e. doesn't use estimates of previous states to estimate the
+		current state value.
+			\begin{lstlisting}
+Parameters:
+	For all (*$s \in S, a \in A(s)$*):
+		Initialize (*$Q(s,a)$*) arbitrarily
+		(*$C(s,a) \leftarrow 0$*)
+		(*$\pi(s) \leftarrow \text{argmax}_aQ(s,a)$*) (with ties broken consistently)
+Loop for each episode:
+	(*$b \leftarrow$*)any soft policy
+	Generate an episode using(*$b\text{:}S_0, A_0, R_1, \ldots, S_{T-1}, A_{T-1}, R_T$*)
+	(*$G \leftarrow 0 $*)
+	(*$W \leftarrow 1 $*)
+	Loop for each step of episode,(*$ t = T-1, T-2, \ldots, 0$*):
+		(*$G\leftarrow \gamma G + R_{t+1}$*)
+		(*$C(S_t,A_t) \leftarrow C(S_t, A_t) + W$*)
+		(*$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \frac{W}{C(S_t,A_t)} \left[ G-Q(S_t,A_t) \right]$*)
+		(*$\pi (S_t) \leftarrow \text{argmax}_a Q(S_t,a)$*) (with ties broken consistently)
+		If (*$A_t \neq \pi (S_t)$*), exit inner Loop (proceed to next episode)
+		(*$W \leftarrow W\frac{1}{b(A_t|S_t)}$*)
+			\end{lstlisting}
+
+
 \end{itemize}
 
 \end{document}
