@@ -2,11 +2,17 @@
 # Based of the environment defined in the RLGlue software
 # https://sites.google.com/a/rl-community.org/rl-glue/Home?authuser=0
 
+# Environment wrapper for CartPole-v1
+
 # Modified by Noah Burghardt
 import numpy as np
+import gym
 
 # Defines the interface of an RLGlue environment
 class Environment:
+	
+	env = None
+	render = None
 
 	# Declare environment variables
 	# Run once, in experiment
@@ -16,7 +22,7 @@ class Environment:
 	# Initialize environment variables
 	# Run once, in experiment
 	def env_init(self):
-		pass
+		self.env = gym.make('CartPole-v1')
 
 	# Start environment
 	# Run at the beginning of each episode
@@ -25,7 +31,10 @@ class Environment:
 	# Returns:
 	#	The first state observation form the environment
 	def env_start(self):
-		return None
+		x = self.env.reset()
+		if self.render:
+			self.env.render()
+		return x
 
 	# A step taken by the environment
 	# Args:
@@ -33,7 +42,12 @@ class Environment:
 	# Returns:
 	#	Reward, state and whether the action is terminal (float, state, boolean)
 	def env_step(self, action):
-		return None
+		observation, reward, terminal, info = self.env.step(action)
+		
+		if self.render:
+			self.env.render()
+
+		return reward, obs, terminal
 
 	# Receive a message from RLGlue
 	# Args:
@@ -41,4 +55,9 @@ class Environment:
 	# Returns:
 	#	message (str): the environment's response to the message (optional)
 	def env_message(self, message):
-		pass
+		if message == 'renderON':
+			self.render = True
+		elif message == 'renderOFF':
+			self.render = False
+		elif message == 'close':
+			self.env.close()
