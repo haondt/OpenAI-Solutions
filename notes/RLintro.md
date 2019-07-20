@@ -54,11 +54,12 @@ scale. Good for comparing learning algorithms' general effectiveness and finding
 episodes run before acheiving the estimate, with the episodes on a logarithmic scale. Good for Monte Carlo method, where you can form an estimate of a single 
 state without forming an estimate of the others.
 
-3. # Algorithms
+# 3. Algorithms
 
 Reinforcement learning algorithms covered by the book.
 
 * **Dynamic Programming / Value Iteration:** Updating state values by sweeping through all states. Computationally expensive, especially on large state spaces.
+Requires knowledge of all state spaces.
 ```
 Parameters:
 	a small threshold theta > 0
