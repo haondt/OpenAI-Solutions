@@ -50,7 +50,7 @@ def testPolicy(policy):
 
 def main():
 	
-	num_eps = 5000
+	num_eps = 50000
 	num_runs = 10
 	random.seed(0)
 	np.random.seed(0)

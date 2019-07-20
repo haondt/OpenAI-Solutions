@@ -5,63 +5,49 @@
 # Modified by Noah Burghardt
 import numpy as np
 
+# Agent class to represent a particular RL strategy
 class Agent:
-	"""
-	Defines the interface of an RLGlue Agent
-
-	ie. These methods must be defined in your own Agent classes
-	"""
 	
-	def __init__(self, width, height, moveset='normal'):
+	# Declare agent variables
+	def __init__(self):
 		"""Declare agent variables."""
 		pass
 
+	# Initialize agent variables
+	# Run once, in experiments
 	def agent_init(self):
-		"""
-		run once, in experiment
-		Initialize agent variables.
-		"""
 		pass
 
+	# Start agent
+	# Runs at the beginning of an episode. The first method called when the experiment
+	# starts, called after the environment starts
+	# Args:
+	#	state (state observation): The agent's current state
+	# Returns:
+	#	The first action the agent takes
 	def agent_start(self, state):
-		"""
-		run at the beginning of an episode
-		The first method called when the experiment starts, called after
-		the environment starts.
-		Args:
-			state (state observation): The agent's current state
-
-		Returns:
-			The first action the agent takes.
-		"""
 		return None
 
+	# A step taken by the agent
+	# Args:
+	#	reward (float): the reward received for thaking the last action taken
+	#	state (state observation): The agen's current state
+	# Returns:
+	#	The action the agent is taking
 	def agent_step(self, reward, state):
-		"""
-		A step taken by the agent.
-		Args:
-			reward (float): the reward received for taking the last action taken
-			state (state observation): The agent's current state
-		Returns:
-			The action the agent is taking.
-		"""
 		return None
 	
+	# Run when the agent termintates
+	# Args:
+	#	reward (float): the reward the agent received for entering the terminal state
 	def agent_end(self, reward):
-		"""
-		Run when the agent terminates.
-		Args:
-			reward (float): the reward the agent received for entering the
-				terminal state.
-		"""
 		pass
 
+	# Receive a message form RLGlue
+	# Args:
+	#	Message (str): the message passed
+	# Returns:
+	#	response (str): The agent's response to the message (optional)
 	def agent_message(self, message):
-		"""
-		receive a message from rlglue
-		args:
-			message (str): the message passed
-		returns:
-			str : the agent's response to the message (optional)
-		"""
+		pass
 

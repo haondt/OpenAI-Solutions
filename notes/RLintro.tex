@@ -129,6 +129,20 @@ Loop for each episode:
 			\end{lstlisting}
 
 
+	\item\textbf{n-step Sarsa}: Using the rewards from the previous n steps to update the value of the current state. 
+	Uses an $\varepsilon$-greedy policy to estimate Q ~ Q*.
+	\begin{lstlisting}
+Initialize (*$Q(s,a)$*) arbitrarily, for all (*$s \in S, a \in A$*)
+Initialize (*$\pi$*) to be (*$\varepsilon$*)-greedy with respect to  (*$Q$*),
+or to a fixed given policy.
+Algorithm parameters:
+	stepsize (*$\alpha \in$*) (0, 1],
+	small (*$\varepsilon\text{ > 0,}$*)
+	a positive integer (*$n$*)
+All store and access operations (For (*$S_t, A_t,\text{ and } R_t$*) can take their
+index mod (*$n$*)+1
+	\end{lstlisting}
+		
 \end{itemize}
 
 \end{document}
