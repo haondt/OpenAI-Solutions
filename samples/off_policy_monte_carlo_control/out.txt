@@ -1,0 +1,24 @@
+act: upright loc: [1, 4]
+act: right loc: [2, 4]
+act: right loc: [3, 4]
+act: upleft loc: [2, 5]
+act: stop loc: [2, 5]
+act: down loc: [2, 4]
+act: downright loc: [3, 3]
+act: down loc: [3, 2]
+act: stop loc: [3, 2]
+act: right loc: [4, 2]
+act: upright loc: [5, 3]
+act: up loc: [5, 4]
+act: stop loc: [5, 4]
+act: right loc: [6, 4]
+act: downright loc: [7, 3]
+[(5, 4), (6, 4), None]
+['stop', 'right', 'downright']
+[-1.0, -1.0, -1.0]
+16 15 16
+15
+sap: downright
+pi: down
+Q {((6, 4), 'downright'): -1.0}
+next?

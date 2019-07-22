@@ -16,12 +16,14 @@ class Environment:
 
 	# Declare environment variables
 	# Run once, in experiment
-	def __init__(self, width, height):
-		pass
+	def __init__(self):
+		self.render = None
+		self.env = None
 
 	# Initialize environment variables
 	# Run once, in experiment
 	def env_init(self):
+		self.render = False
 		self.env = gym.make('CartPole-v1')
 
 	# Start environment
@@ -34,7 +36,7 @@ class Environment:
 		x = self.env.reset()
 		if self.render:
 			self.env.render()
-		return x
+		return tuple(x)
 
 	# A step taken by the environment
 	# Args:
@@ -47,7 +49,7 @@ class Environment:
 		if self.render:
 			self.env.render()
 
-		return reward, obs, terminal
+		return reward, tuple(observation), terminal
 
 	# Receive a message from RLGlue
 	# Args:
