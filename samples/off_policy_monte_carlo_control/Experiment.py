@@ -3,8 +3,8 @@
 
 import numpy as np
 from Agent import Agent
-from WindyGrid import GridWorld as Environment
-#from Environment import Environment
+#from WindyGrid import GridWorld as Environment
+from Environment import Environment
 from rl_glue import RLGlue
 import matplotlib
 matplotlib.use('Agg')
@@ -45,8 +45,9 @@ def testPolicy(policy):
 	# set up 2d array for average rewards
 	# rewards[step] = sum of rewards across all runs for that step
 	rewards = [0 for i in range(1000)]
-	for run in range(100):
+	for run in range(1):
 		rlglue.rl_init()
+		#rlglue.rl_env_message('renderON')
 		rlglue.rl_start()
 		
 		terminal = False
@@ -56,7 +57,7 @@ def testPolicy(policy):
 				rewards[step] += r
 
 	# average rewards
-	rewards = [i/100 for i in rewards]
+	rewards = [i/1 for i in rewards]
 
 	return rewards
 
@@ -72,14 +73,21 @@ def main():
 	rlglue = RLGlue(env, agent)
 	del agent, env
 
+
 	# Configure experiment
-	num_eps = 1000000
+	num_eps = 10000
 	# initialize rlglue
 	rlglue.rl_init()
 
+	avg_rewards = []
 	avg_reward = 0
+	max_reward = 0
+	best_policy = None
 	# Run through each episode
+	#rlglue.rl_env_message('renderON')
 	for ep in range(num_eps):
+		if ep % int(num_eps/10) == 0:
+			print('ep:', ep, 'bestpolicy', max_reward)
 		# start episode
 		rlglue.rl_start()
 		rewards = 0
@@ -91,27 +99,36 @@ def main():
 			rewards += reward
 			steps += 1
 
-		avg_reward = rewards/steps
-		print('ep:',ep, 'avg reward:', avg_reward, 'steps:', steps)
+		avg_reward = rewards
+		avg_rewards.append(avg_reward)
+
+		if rewards > max_reward:
+			max_reward = rewards
+			best_policy = rlglue.rl_agent_message('policy')
+		#print('ep:',ep, 'avg reward:', avg_reward, 'steps:', steps)
 		#print(rlglue.rl_agent_message('policy'))
 		#input()
 	
 		
-		#plt.plot(avg_reward)
-		#plt.savefig('avg_rewards.png')
-		
+	plt.plot(avg_rewards)
+	plt.plot(moving_average(avg_rewards,10))
+	plt.plot(moving_average(avg_rewards,100))
+	plt.savefig('results.png')
 
 	# Get generated policy
 	policy = rlglue.rl_agent_message('policy')
 
 	# Test policy
-	result = testPolicy(policy)
+	result = testPolicy(best_policy)
 
 	# Graph results
-	plt.plot(result)
-	plt.savefig('results.png')
+	#plt.plot(result)
+	#plt.savefig('results.png')
 
-
+def moving_average(a, n=3):
+	ret = np.cumsum(a, dtype=float)
+	ret[n:] = ret[n:] - ret[:-n]
+	return ret[n-1:]/n
 	
 
 if __name__ == '__main__':

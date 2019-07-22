@@ -105,7 +105,7 @@ class GridWorld:
 			self.location[0] += 1
 			self.location[1] -= 1
 		elif not action == 'stop':
-			raise ValueError('invalid action')
+			raise ValueError('invalid action: ' + str(action))
 		
 		# check validity of action
 		if	self.location[0] < 0 or \

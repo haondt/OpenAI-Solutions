@@ -48,7 +48,7 @@ class Agent:
 	#	The first action the agent takes
 	def agent_start(self, state):
 		# start episode
-		a = self.epGreedy(self.epsilon, self.pi, state, self.A)
+		a = self.pi_select(self.pi, state,self.A)
 
 		# Reset episode data and store new
 		self.ep_states = [state]
@@ -66,7 +66,7 @@ class Agent:
 	#	The action the agent is taking
 	def agent_step(self, reward, state):
 		# Choose ep_greedy action
-		a = self.epGreedy(self.epsilon, self.pi, state, self.A)
+		a = self.pi_select(self.pi,state, self.A)
 
 		# Save episode step
 		self.ep_rewards.append(reward)
@@ -89,37 +89,43 @@ class Agent:
 		# set up variables for processing episode
 
 		# Loop through steps in episode
-		G = {}
-		Return = 0
 
-		for t in range(len(self.ep_actions)):
-			# get reward, state-action pair and reward for episode step
+		T = len(self.ep_actions)
+
+		# Get the returns for each step in episode
+		Return = 0
+		G = {}
+		for t in range(T-1, -1, -1):
 			r = self.ep_rewards[t+1]
-			Return 	
-# TODO: calculat return (gotta do this biz in reverse):
-# G_t = R_{t+1} + gamma*G_{t+1}
+			sap = (self.ep_states[t], self.ep_actions[t])
+			Return = r + self.gamma*Return
+			G[sap] = Return
+
+		for t in range(T):
+			# get reward, state-action pair and reward for episode step
 			sap = (self.ep_states[t], self.ep_actions[t])
 
-			if sap not in G:
-				G[sap] = # return 
-				self.returns[sap] = []
-			self.returns[sap].append(G[sap])
+			#print('t', t, 'sap', sap,'G', Return)
+
+			self.returns[sap] = self.returns.get(sap,[]) + [G[sap]]
 
 
+			#input()
 
-			if sap[0] == (6,4):
-				print(sap, self.Q.get(sap,None))
+			#if sap[0] == (6,4):
+				#print(sap, self.Q.get(sap,None))
 			self.Q[sap] = sum(self.returns[sap])/len(self.returns[sap])
-			if sap[0] == (6,4):
-				print(sap, self.Q[sap], self.returns[sap])
-				input()
+			#if sap[0] == (6,4):
+				#print(sap, self.Q[sap], self.returns[sap])
+				#input()
 
 			Astar = self.argmaxa_rand(self.Q, sap[0],self.A)
+			self.pi[sap[0]] = {}
 			for a in self.A:
 				if a == Astar:
-					self.pi[(sap[0],a)] = 1 - self.epsilon + self.epsilon / len(self.A)
+					self.pi[sap[0]][a] = 1 - self.epsilon + self.epsilon / len(self.A)
 				else:
-					self.pi[(sap[0],a)] = self.epsilon / len(self.A)
+					self.pi[sap[0]][a] = self.epsilon / len(self.A)
 			
 
 
@@ -129,26 +135,29 @@ class Agent:
 	# returns:
 	#	response (str): The agent's response to the message (optional)
 	def agent_message(self, message):
+		# Output what the agent thinks is the optimal policy
 		if message == "policy":
-			return self.pi
+			pi = {}
+			for s in self.pi:
+				# Choose the action with the highest probability
+				maxP = 0
+				for a in self.pi[s]:
+					if self.pi[s][a] > maxP:
+						maxP = self.pi[s][a]
+						pi[s] = a
+			return pi
 
-	# Perform an action selection using an epsilon-greedy selection
-	# Args
-	#	eps: epsilon value
-	#	Q: action values to base selection off of
-	#	A: actions to choose from
-	#	s: current state
-	# returns:
-	#	action (action): action chosen
-	def epGreedy(self, eps, Q, s, A):
-		# Best action with probability 1-eps
-		if np.random.random() > eps:
-			return self.argmaxa_rand(Q, s, A)
-
-		# Choose an action at random with porbability eps
-		else:
-			return np.random.choice(A)
 	
+	def pi_select(self, pi, s, A):
+		rand = np.random.random()
+		probs = self.pi.get(s,{a:1/len(A) for a in A})
+		val = 0
+		for a in A:
+			val += probs[a]
+			if rand < val:
+				return a
+
+
 
 
 	# returns the action with the highest action-value
