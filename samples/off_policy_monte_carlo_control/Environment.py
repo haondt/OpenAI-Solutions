@@ -13,7 +13,7 @@ class Environment:
 	
 	env = None
 	render = None
-	precision = 2
+	precision = 1
 
 	# Declare environment variables
 	# Run once, in experiment

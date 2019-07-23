@@ -76,7 +76,7 @@ def main():
 
 
 	# Configure experiment
-	num_eps = 1000000
+	num_eps = 100000
 	# initialize rlglue
 	rlglue.rl_init()
 
@@ -88,7 +88,7 @@ def main():
 	#rlglue.rl_env_message('renderON')
 	#for ep in range(num_eps):
 	ep = 0
-	while True:
+	while ep < num_eps:
 		ep += 1
 		#if ep % int(num_eps/10) == 0:
 		#print('ep:', ep, 'bestpolicy', max_reward)
