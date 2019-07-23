@@ -236,11 +236,18 @@ more circles that are touching both points, the more learning on one state affec
 
 # Tile coding
 
-Each feature becomes a tiling, a single grid with multiple partitions that covers the entire state space. Each partition is
-considered a *tile*, and the entire feature is considered a *tiling*. Each feature is no long binary (in or out), but can 
-contain a value indicating which tile (cell) of the feature the state resides in. We can add more features, and offset them
-(diagonally) by a fraction of the tile width. Any state will then exists in 1 tile of each tiling. We can then define the
-feature vector, **x**(s), with one component for each feature, indicating which tile of feature/tiling the state is in.
+We can cover the state spaces with tilings, a grid essentially. Each tiling has
+one tile for each feature (e.g. an 8x8 grid is a tiling for 64 features). Each
+feature has a receptive field for each tiling. All features have the same number
+of fields, corresponding with the number of tilings. Any state in the state
+space will overlap with with 1 tile (feature) in each of the tilings (fields).
+It can be different features for each field, depending on how the tiles overlap.
+The feature vector **x**(s) has one component for each tile in each tiling. Thus
+the length of **x**(s) is the height of the tilings x the width of the tilings x
+the number of tilings, or the number of features x the number of fields per
+feature and the number of active features will always be the number of fields
+(one active feature per field). Each component is a 1 or 0 indicating if that
+particular feature/field combo is activated by the state.
 
 The step size (alpha) can be chosen as 1/((# tilings)*(how far the estimate should move inversly towards the target). e.g.
 1/n = estimate moves directly to target, 1/10n = estimate moves 1 tenth of the way to the target.
