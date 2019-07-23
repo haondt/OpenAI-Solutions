@@ -6,10 +6,15 @@
 import numpy as np
 
 # Agent class to represent a particular RL strategy
+# MC first visit on-policy control
 class Agent:
 
+	# Set up parameters for agent
+	# State-action pair values
 	Q = None
+	# set of returns to average for each state (returns[(s,a)] = an array)
 	returns = None
+	# output/control policy
 	pi = None
 
 	# Variables to hold the execution of an episode
@@ -17,7 +22,7 @@ class Agent:
 	ep_actions = None
 	ep_rewards = None
 
-	# Action space
+	# Action space, to be configured by the environment
 	A = None
 
 	# Agent configuration variables
