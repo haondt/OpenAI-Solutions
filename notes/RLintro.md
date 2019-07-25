@@ -19,8 +19,15 @@ the more the agent is concerned with future rewards. This should be configured i
 current decisions affect its future state(s).
 epsilon = random chance of agent performance an exploration (random) movement. Typically 0.1 for epsilon-greedy action
 selection
-alpha = stepsize, amount to adjust value function by when learning new information. typically 0.1 or 0.5 for tabular methods,
+alpha = stepsize, amount to adjust value function by when learning new information.
+A constant stepsize (e.g 0.1) can track a non-stationary problem, as the agent
+continues to value the every state equally. A changing step size (eg 1/n) will
+allow the state values to converge. alpha is typically 0.1 or 0.5 for tabular methods,
 0.0001/(# tilings) for approximation methods.
+T = the terminal (last) time step
+t = the time step
+τ = the time step being updated in n-step cases
+lambda = trace-decay parameter (e.g. 0.9)
 ```
 
 # Dimensions of an algorithm
@@ -234,6 +241,11 @@ Each circle has a weight as well. All the weights combined form the vector **w**
 all the circles enveloping the state are affected. Imagine we have a second point/state, somewhere else on the space. The
 more circles that are touching both points, the more learning on one state affects the value function of the other state.
 
+The value of the state is then represented by v\_hat(s,**w**) ~ v\_pi(s). **w**
+has one component for each feature, and there are typically much fewer features
+than states (think float-based states) and changing one weight affects many
+states. Similarly we also get q\_hat(s,a,**w**) ~ q\*(s,a).
+
 # Tile coding
 
 We can cover the state spaces with tilings, a grid essentially. Each tiling has
@@ -249,7 +261,7 @@ feature and the number of active features will always be the number of fields
 (one active feature per field). Each component is a 1 or 0 indicating if that
 particular feature/field combo is activated by the state.
 
-The step size (alpha) can be chosen as 1/((# tilings)*(how far the estimate should move inversly towards the target). e.g.
+The step size (alpha) can be chosen as 1/((# tilings)\*(how far the estimate should move inversly towards the target). e.g.
 1/n = estimate moves directly to target, 1/10n = estimate moves 1 tenth of the way to the target.
 
 Asymmetrically offset (circlish) tiling is preferred over uniformly offset (Squarish, e.g. each tile is up and to the right
@@ -261,4 +273,214 @@ We can also hash a tile into a set of just a few mini-tiles - areas that cover a
 requirment for the tile and the tiling to which it is part of, as though the task may exists in a large state space, the task
 itself may only access a small part.
 
-p.222 (9.6 Selecting Step-Size Parameters Manually)
+# Step Size
+
+* Good rule of thumb:
+
+alpha = (T x E[**x**^transpose **x**])^-1
+
+# Semi-gradient descent
+
+* Gradient-descent: representing the state space as a weight vector (**w**) and
+adjusting it after each example by a small amount in the direciton that would
+most reduce the error, that is, the direction in which the error descends most
+rapidly.
+
+* Bootstrapping methods take into account the effect of changing the weight
+vector **w** on the estimate, but ignore its effect on the target. They
+include only part of the gradient are therefore semi-gradient.
+
+# Average reward
+
+* Toss out episodic vs discounted (continuing) tasks, bring in average reward
+* `r(pi)` = average reward or average rate of reward
+
+# Differential return
+
+* Return is definned by difference between reward and average reward
+```
+G[t] = R[t+1] - r(pi) + R[t+2] - r(pi) + R[t+3] - r[pi] + ...
+```
+* value functions (v, q) and td errors are also defined using said difference
+
+# Differential semi-gradient sarsa(0) with average reward
+```
+Parameters 
+	# num features
+	d = the number of features and size of w
+	# differentiable action-value function
+	Q = [arbitrary value for s in S for A in A for i in d]
+	# step sizes
+	alpha > 0
+	beta > 0
+	# weights
+	w = [0 for i in d]
+	# average reward estimate
+	R_bar = 0
+
+Init S, A
+for each step:
+	Take A, observe R, S'
+	choose A' from Q(S,*,w) -> episilon greedy
+	error = R - R_bar + Q(S',A',w) - q(S,A,w)
+	R = R_bar + beta*error
+	w = w + alpha*error*nabla_Q(S,A,w)
+	S = S'
+	A = A'
+```
+
+# Differential semi-gradient n-step Sarsa
+```
+Parameters
+	# num features
+	d = num features/len(w)
+	# differentiable action-value function
+	Q = [arbitrary value for s in S for a in A[s] for i in d]
+	# weights
+	w = [0 for _ in d]
+	# Average reward estimate
+	R_bar = 0
+	# stepsize
+	alpha > 0
+	beta > 0
+	# number of steps
+	n is int, n >= 0
+	"All store and access opertations (S[t], A[t], R[t]_) can take their index mod n+1" (?)
+
+Init A[0], S[0]
+
+Loop for each step t = 0,1,2,...:
+	take action A[t], observe R[t+1], S[t+1]
+	Select A[t+1] ~ argmaxa(pi(*,S[t+1]) or epsilon-greedy wrt Q[S[t+1], *, w)
+	tau = t - n + 1 # tau is the time whose estimate is being updated
+	if tau >= 0:
+		estimate = sum(from i = tau+1 to tau+n: (R[i] - R_bar) + Q(S[tau+n],
+			A[tau+n],w) - Q(S[tau], A[tau], w)
+		R_bar = R + beta*estimate
+		w = w + alpha*estimate*nabla_Q(S[t], A[t], w)
+```
+
+# No idea where to put this
+
+```
+[a,b,c]^transpose =  a
+                   [ b ]
+                     c
+
+G[t:t+n] = n-step return from t+1 to t+n
+G[t:h] = n-step return from t+1 to h
+
+# undiscounted MC (all step) return (episodic)
+G[T] = 0
+G[t] = R[t+1] + R[t+2] + ... + R[T]
+# discounted 1-step return (continuing)
+G[t] = R[t+1] + gamma*R[t+2] + gamma**2 * R[t+3] + ...
+     = sum([gamma**k * R[t+k+1] for k in range(0, infinity)])
+     = R[t+1] + gamma*G[t+1]
+     = sum([gamma**(k-t-1) * R[k] for k in range(t+1, T+1)]) # T can be inifinite or gamma can be 1 but not both
+	 = G[t:t+1]
+	 = R[t+1] + gamma*V[t](S[t+1])
+# discounted n-step return (continuing)
+G[t:h] = R[t+1] + gamma*G[t+1:h]
+G[t:t+n] = R[t+1] + gamma*R[t+2] + ... + gamma**(n-1) * R[t+n] +
+	gamma**n * Q[t+n-1](S[t+n], A[t+n]), n >= 1, 0 <= t < T=n
+
+```
+nabla\_f(**w**) = [ df(**w**)/dw\_1, df(**w**)/dw\_2 , ... ]^transpose
+df(**w**)/dw\_x = derivative of f(**w**) wrt w\_x.
+nablaf(**w**) = gradient of f wrt **w**.
+
+In linear methods, we have **x**(s) = \[x\[i]\[s] for i in tiles per tiling/# features]
+in this case,
+
+nablav\_hat[(s,**w**)] = **x**(s)
+nablaa\_hat(s,a,**w**) = **x**[(s,a)]
+q\_hat(s,a,**w**) = **w**^transpose **x**(s,a) = `sum([w[i]*x[i][(s,a)] for i in [1,d]]`
+  * Where `d` is the # of features aka the size of **w**
+
+# Eligibility traces
+* TD(lambda)
+  * Lambda = 0 -> TD(0)
+  * Lambda = 1 -> MC
+* Offers computational advantages over n-step TD for unifying TD(0) to MC
+* *Eligibility trace*, **z**, where len(z) = len(w) = d
+* When a component of w is used to calculate an estimate, the corresponding
+component of z is bumped up and begins to fade away.
+* Learning occurs inside that component of w <=> a nonzero TD error occurs
+before the trace falls back to zero.
+* Lambda = trace-decay parameter in [0,1] which determines how fast it falls
+* N-step = "forward views"
+* eligibility trace = "backward views"
+```
+# episodic lambda-return
+G(Lambda)[t] = (1-lambda)*(sum(from n=1 to T-t-1: lambda**(n-1)*G[t:t+n])
+	+ lambda**(T-t-1)*G[t]
+```
+* The short: Online lambda-return is doable but too computationally expensive to
+feasibly be run online. "True online TD(lambda)" is feasible but dutch traces
+are even cheaper (but offline). (True -> because it is fast enough to be run online, which is
+more "true" to the spirit of online learning)
+
+# Sarsa lambda
+```
+# action-value form n-step return
+G[t:t+n] = R[t+1] + ... + gamma**(n-1) * R[t+n]
+	+ gamma**n * q(S[t+n], A[t+n], w[t+n-1]), assert(t + n < T)
+G[t:t+n] = G[t] if t+n >= T
+# update rule
+w[t+1] = w[t] + alpha*error[t]*z[t]
+error[t] = R[t+1] + gamma*Q(S[t+1], A[t+1], w[t]) - Q(S[t], A[t], w[t])
+z[-1] = [0 for _ in d]
+z[t] = gamma*lambda*z[t-1] + nabla_Q(S[t], A[t], w[t]), asser(0<=t<=T)
+```
+
+Image from the book on p. 304 describes the differences well.
+* Imagine an agent has finished an episode
+* 1-step sarsa (sarsa(0)) updates the action-value of the action taken in the
+	last step (right next to the goal)
+* 10-step sarsa (n-step sarsa) updates **equally** the action-values of the last
+10 actions from the goal.
+* Sarsa(lambda) updates all of the action-values, with different degrees. The
+one closest to the goal is changed the most and the change reduces with each
+step.
+
+* NOTE: the below can be modified to use dutch traces (as per exercise 12.6)..
+figure that out
+
+# Sarsa(lambda) with binary features and linear function approximation
+```
+Parameters
+	some funciton F s.t. F(s,a) = set of indices of active features for (s, a)
+	alpha > 0
+	0 <= lambda <= 1
+	d = num features/size of w
+	w = [0 for _ in d]
+	z = transpose([arbitrary value for _ in d])
+
+Loop for each episode:
+	init S
+	choose A epsilon greedily according to Q(S,*,w)
+	z = [0 for _ in d]
+	Loop for each step of episode:
+		Take A, observe R, S'
+		error = R
+		Loop for i in F(S,A):
+			error = error - w[i]
+			if (accumulating traces)
+				z[i] = z[i] + 1
+			elif(replacing traces)
+				z[i] = 1
+	
+		If S' is terminal:
+			w = w + alpha*error*z
+			goto next episode
+
+		Choose A' epsilon greedily from Q(S,*,w)
+		Loop for i in F(S', A'):
+			estimate = estimate + gamma*w[i]
+		w = w + alpha*estimate*z
+		z = gamma*lambda*z
+		S = S'
+		A = A'
+
+
