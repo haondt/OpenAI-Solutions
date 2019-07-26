@@ -323,7 +323,7 @@ for each step:
 	Take A, observe R, S'
 	choose A' from Q(S,*,w) -> episilon greedy
 	error = R - R_bar + Q(S',A',w) - q(S,A,w)
-	R = R_bar + beta*error
+	R_bar = R_bar + beta*error
 	w = w + alpha*error*nabla_Q(S,A,w)
 	S = S'
 	A = A'
@@ -394,6 +394,23 @@ In linear methods, we have **x**(s) = \[x\[i]\[s] for i in tiles per tiling/# fe
 in this case,
 
 nablav\_hat[(s,**w**)] = **x**(s)
+
+# linear methods
+v(s,w) = transpose(w)*x(s) = sum(from i=1 to d: w[i]*x(s)[i])
+nabla_v(s,w) = x(s)
+w[t+1] = w[t] + alpha*(U[t] + v(S[t], w[t]))*x[S[t]]
+q(s,a,w) = transpose(w)*(s,a) = sum(from i to d: w[i]*x(s,a)[i])
+q(s[T],a,w) = 0
+if x is a list of active features, i.e. x = [0,2,3], to convert it to a binary
+feature vector we put zeroes in all the active feature positions. assuming 5
+total feature vectors, x => [1,0,1,1,0]. Now the sum w[i]*x[i] would be zero
+for all the inactive featurs of x. Rather than multiply all those zeroes, we can
+just use the first x = [0,2,3] as indexes from w. sum([w[i] for i in x]). And
+get the same sum.
+
+nabla_q(s,a,w) = x(s,a)
+
+
 nablaa\_hat(s,a,**w**) = **x**[(s,a)]
 q\_hat(s,a,**w**) = **w**^transpose **x**(s,a) = `sum([w[i]*x[i][(s,a)] for i in [1,d]]`
   * Where `d` is the # of features aka the size of **w**
@@ -549,4 +566,9 @@ G_lambdaa[t] = R[t+1] + gamma[t+1] * ((1-lambda[t+1])*q(S[t+1],A[t+1],w[t])
 G_lambdaa[t] = R[t+1] + gamma[t+1] * ((1-lambda[t+1])*V[t](S[t+1])
 	+ lambda[t+1]*G_lambdas[t+1])
 V[t](s) = sum(for all a: pi(a|s)*q(s,a,w[t]))
+```
+
+# tiles3.py
+```
+http://incompleteideas.net/tiles/tiles3.py-remove
 ```

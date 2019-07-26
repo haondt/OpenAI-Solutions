@@ -13,8 +13,6 @@ class Environment:
 	
 	env = None
 	render = None
-	# Allow for simple state aggregation by rounding the components of the state
-	precision = 1
 
 	# Declare environment variables
 	# Run once, in experiment
@@ -38,7 +36,8 @@ class Environment:
 		x = self.env.reset()
 		if self.render:
 			self.env.render()
-		return tuple(np.round(x,self.precision))
+		#return tuple(x)
+		return tuple(np.round(x,1))
 
 	# A step taken by the environment
 	# Args:
@@ -51,7 +50,14 @@ class Environment:
 		if self.render:
 			self.env.render()
 
-		return reward, tuple(np.round(observation,self.precision)), terminal
+
+		#return reward, tuple(np.round(observation,1)), terminal
+
+		if terminal:
+			return -1.0, tuple(observation), True
+		else:
+			return 0.0, tuple(observation), False
+
 
 	# Receive a message from RLGlue
 	# Args:
@@ -67,4 +73,11 @@ class Environment:
 			self.env.close()
 	
 	def get_actions(self):
-		return [0,1]
+		return np.array([0,1])
+	
+	def get_max_observation(self):
+		#return([3,3,3,3])
+		return self.env.observation_space.high.tolist()
+	def get_min_observation(self):
+		#return([1,1,1,1])
+		return self.env.observation_space.low.tolist()
