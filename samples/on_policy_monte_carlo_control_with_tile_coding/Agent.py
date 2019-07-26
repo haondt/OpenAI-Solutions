@@ -32,7 +32,8 @@ class Agent:
 	tiling_side_length = 8
 
 	# weight vector
-	w = [0]*hash_table_size
+	w = None
+	#w = None
 	iht = IHT(hash_table_size)
 
 	# eligibility trace
@@ -40,7 +41,7 @@ class Agent:
 	z = [0]*hash_table_size
 
 	# step size
-	alpha = 0.01/num_offset_tilings
+	alpha = 0.001/num_offset_tilings
 	gamma = 0.9
 	lam = 0.9
 
@@ -91,6 +92,7 @@ class Agent:
 		self.v = {}
 		self.last_action = None
 		self.last_state = None
+		self.w = np.zeros(self.hash_table_size)
 
 	# Start agent
 	# Runs at the beginning of an episode. The first method called when the experiment
@@ -137,12 +139,13 @@ class Agent:
 		
 		# error[t]
 		error = R
-		for feature in self.active_features(S,A):
+		self.z[self.active_features(S,A)] += 1
+		#for feature in self.active_features(S,A):
 			#error -= w[feature]
 			# accumulating traces
 			#self.z[feature] += 1
 			# replacing traces
-			self.z[feature] = 1
+		#	self.z[feature] = 1
 
 		adjusted_error = error
 		
@@ -160,11 +163,14 @@ class Agent:
 			#error += self.gamma*w[feature]
 
 		adjusted_error2 = error
-		alpha = 0.01/self.times_selected[A]
-		for i in range(len(self.w)):
-			self.w[i] += alpha*error*self.z[i]
-		for i in range(len(self.w)):
-			self.z[i] *= self.gamma*self.lam
+		#alpha = 0.01/self.times_selected[A]
+		alpha = self.alpha
+		#for i in range(len(self.w)):
+		#	self.w[i] += alpha*error*self.z[i]
+		self.w += alpha * error *self.z
+		#for i in range(len(self.w)):
+		#	self.z[i] *= self.gamma*self.lam
+		self.z *= self.gamma*self.lam
 
 		#print("new", self.Q(S,A,w))
 		new = self.Q(S,A,w)
@@ -202,23 +208,28 @@ class Agent:
 		w = self.w
 
 		self.times_selected[A] += 1
-		alpha = 0.01/self.times_selected[A]
+		#alpha = 0.01/self.times_selected[A]
+		alpha = self.alpha
 		#print("reward", R)
 		#print("old", self.Q(S,A,w))
 		
 		# error[t]
-		error = R
-		for feature in self.active_features(S,A):
-			error -= w[feature]
+		features = self.active_features(S,A)
+		error = R - np.sum(w[features])
+		self.z[features] += 1
+
+		#for feature in self.active_features(S,A):
+		#	error -= w[feature]
 			# accumulating traces
-			self.z[feature] += 1
+		#	self.z[feature] += 1
 			# replacing traces
 			#self.z[feature] = 1
 
 		#input(str(R) + " " + str(error))
 		
-		for i in range(len(self.w)):
-			self.w[i] += alpha*error*self.z[i]
+		#for i in range(len(self.w)):
+		#	self.w[i] += alpha*error*self.z[i]
+		self.w += alpha*error*self.z
 
 
 		#print("new", self.Q(S,A,w))
@@ -264,8 +275,8 @@ class Agent:
 
 	def Q(self, state, action, w):
 		features = self.active_features(state, action)
-		#return np.sum(w[features])
-		return sum([w[i] for i in features])
+		return np.sum(w[features])
+		#return sum([w[i] for i in features])
 	
 
 

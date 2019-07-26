@@ -91,7 +91,14 @@ def main():
 	#rlglue.rl_env_message('renderON')
 	#for ep in range(num_eps):
 	ep = 0
+	x = 50
+	last_i = x
+	last_n = np.zeros(x)
+	best = (0,-1)
 	while ep < num_eps:
+		last_i += 1
+		if last_i >= len(last_n):
+			last_i = 0
 		ep += 1
 		#if ep % int(num_eps/10) == 0:
 		#print('ep:', ep, 'bestpolicy', max_reward)
@@ -106,13 +113,21 @@ def main():
 			rewards += reward
 			steps += 1
 
-		avg_reward = rewards
-		avg_rewards.append(avg_reward)
+		if steps > best[0]:
+			best = (steps,ep)
 
-		print('ep',ep, 'steps', steps)
+		#avg_reward = rewards
+		#avg_rewards.append(avg_reward)
+		last_n[last_i] = steps
+
+		#print('ep',ep, 'steps', steps)
 		#print('ep:',ep, 'avg reward:', avg_reward, 'steps:', steps)
 		#print(rlglue.rl_agent_message('policy'))
 		#input()
+		#if best[0] >= 500:
+		if np.average(last_n) > 200:
+			print('ep',ep,'mvg avg', np.average(last_n), 'best',best)
+			break
 	
 		
 	plt.plot(avg_rewards)
