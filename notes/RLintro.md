@@ -416,20 +416,29 @@ before the trace falls back to zero.
 G(Lambda)[t] = (1-lambda)*(sum(from n=1 to T-t-1: lambda**(n-1)*G[t:t+n])
 	+ lambda**(T-t-1)*G[t]
 ```
+
+# Dutch traces
+```
+# auxilary vectors
+a[0] = w[0]
+a[t] = a[t-1] - alpha * x[t]*transpose(x[t])*a[t-1]
+z[0] = x[0]
+z[t] = z[t-1] + (1-alpha*transpose(z[t-1])*x[t])*x[t] + x[t]
+# weight vector
+w[t+1] = w[t] + alpha*(G[t] - transpose(w[t])*x[t])*x[t], 0 <= t < T (? eq. 12.13)
+```
+
 * The short: Online lambda-return is doable but too computationally expensive to
 feasibly be run online. "True online TD(lambda)" is feasible but dutch traces
-are even cheaper (but offline). (True -> because it is fast enough to be run online, which is
+are even cheaper. (True -> because it is fast enough to be run online, which is
 more "true" to the spirit of online learning)
 
 # Sarsa lambda
 ```
-# action-value form n-step return
-G[t:t+n] = R[t+1] + ... + gamma**(n-1) * R[t+n]
-	+ gamma**n * q(S[t+n], A[t+n], w[t+n-1]), assert(t + n < T)
-G[t:t+n] = G[t] if t+n >= T
 # update rule
-w[t+1] = w[t] + alpha*error[t]*z[t]
 error[t] = R[t+1] + gamma*Q(S[t+1], A[t+1], w[t]) - Q(S[t], A[t], w[t])
+w[t+1] = w[t] + alpha*error[t]*z[t]
+# eligibility trace
 z[-1] = [0 for _ in d]
 z[t] = gamma*lambda*z[t-1] + nabla_Q(S[t], A[t], w[t]), asser(0<=t<=T)
 ```
@@ -478,9 +487,66 @@ Loop for each episode:
 		Choose A' epsilon greedily from Q(S,*,w)
 		Loop for i in F(S', A'):
 			estimate = estimate + gamma*w[i]
+
 		w = w + alpha*estimate*z
 		z = gamma*lambda*z
 		S = S'
 		A = A'
+```
 
+# True online Sarsa(lambda) for estimating transpose(w)x ~ q\_pi or q\*
+```
+Parameters
+	# feature function
+	x = [[binary features for _ in d] for s in S+ for a in A]
+	x(terminal, *) = [0 for _ in d]
+	# step size
+	alpha > 0
+	# trace decay
+	0 <= lambda <= 1
+	# weights
+	w = [0 for _ in d]
 
+Loop for each episode:
+	init S
+	Choose A from epsilon greedy S,*,w
+	x = x(S,A)
+	z = [0 for _ in d]
+	Q_old = 0
+	Loop for each step of episode:
+		Take action A, observe R, S'
+		Choose A' epsilon greedy S',*,w
+		x' = x(S',A')
+		Q = transpose(w)x
+		Q' = transpose(w)x'
+		error = R = gamma*Q' - Q
+		z = gamma*lambda*z + (1 -alpha*gamma*lambda*tranpose(z)*x)*x
+		w = w + alpha*(error + Q - Q_old)*z - alpha*(Q-Q_old)*x
+		Q_old = Q'
+		x = x'
+		A = A'
+	until S' is terminal
+```
+
+# The termination function
+* Having a different gamma (`gamma[t] = gamma(S[t])`) and lambda
+	(`lambda[t] = lambda(S[t], A[t]) for each time step.
+* General definition of return
+```
+G[t] = R[t+1] + gamma[t]*G[t+1]
+     = R[t+1] + gamma[t]*R[t+2] + gamma[t+1]*gamma[t+2]*R[t+3] + ...
+     = sum(k=t to infinity: (prod(i=t+1 to k: gamma[i]))*R[k+1])
+```
+* lambda-return
+```
+# state-based
+G_lambdas[t] = R[t+1] + gamma[t+1] * ((1-lambda[t+1])*v(S[t+1],w[t])
+	+ lambda[t+1]*G_lambdas[t+1])
+# Sarsa
+G_lambdaa[t] = R[t+1] + gamma[t+1] * ((1-lambda[t+1])*q(S[t+1],A[t+1],w[t])
+	+ lambda[t+1]*G_lambdaa[t+1])
+# Expected sarsa
+G_lambdaa[t] = R[t+1] + gamma[t+1] * ((1-lambda[t+1])*V[t](S[t+1])
+	+ lambda[t+1]*G_lambdas[t+1])
+V[t](s) = sum(for all a: pi(a|s)*q(s,a,w[t]))
+```
