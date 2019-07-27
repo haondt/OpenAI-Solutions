@@ -13,6 +13,7 @@ class Environment:
 	
 	env = None
 	render = None
+	num_steps = None
 
 	# Declare environment variables
 	# Run once, in experiment
@@ -24,7 +25,7 @@ class Environment:
 	# Run once, in experiment
 	def env_init(self):
 		self.render = False
-		self.env = gym.make('CartPole-v1')
+		self.env = gym.make('Acrobot-v1')
 
 	# Start environment
 	# Run at the beginning of each episode
@@ -34,10 +35,11 @@ class Environment:
 	#	The first state observation form the environment
 	def env_start(self):
 		x = self.env.reset()
+		self.num_steps = 0
 		if self.render:
 			self.env.render()
 		#return tuple(x)
-		return tuple(np.round(x,1))
+		return tuple(x)
 
 	# A step taken by the environment
 	# Args:
@@ -50,11 +52,16 @@ class Environment:
 		if self.render:
 			self.env.render()
 
+		self.num_steps += 1
 
-		#return reward, tuple(np.round(observation,1)), terminal
+		return reward, tuple(observation*-1), terminal
+		
 
 		if terminal:
-			return -1.0, tuple(observation), True
+			if self.num_steps >= 500:
+				return 0.0, tuple(observation), True
+			else:
+				return -1.0, tuple(observation), True
 		else:
 			return 0.0, tuple(observation), False
 
@@ -73,7 +80,7 @@ class Environment:
 			self.env.close()
 	
 	def get_actions(self):
-		return np.array([0,1])
+		return np.array([0,1,2])
 	
 	def get_max_observation(self):
 		#return([3,3,3,3])

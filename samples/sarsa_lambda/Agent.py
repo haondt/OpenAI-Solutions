@@ -21,7 +21,7 @@ class Agent:
 	A = None
 
 	# Agent configuration variables
-	epsilon = 0.1
+	epsilon = 0.05
 
 	# Index hash table / number of features
 	hash_table_size = 2048
@@ -38,10 +38,10 @@ class Agent:
 
 	# eligibility trace
 	# z[-1] = [0 for in d]
-	z = [0]*hash_table_size
+	z = None
 
 	# step size
-	alpha = 0.001/num_offset_tilings
+	alpha = 0.005/num_offset_tilings
 	gamma = 0.9
 	lam = 0.9
 
@@ -86,13 +86,13 @@ class Agent:
 	# Run once, in experiments
 	def agent_init(self):
 		# Assume there are no states (new states can be valued lazily)
-		self.R_bar = 0
 		self.pi = {}
 		self.returns = {}
 		self.v = {}
 		self.last_action = None
 		self.last_state = None
 		self.w = np.zeros(self.hash_table_size)
+		self.w = np.full(self.hash_table_size, 0.1)
 
 	# Start agent
 	# Runs at the beginning of an episode. The first method called when the experiment
@@ -134,8 +134,6 @@ class Agent:
 		#input(self.active_features(S,A))
 		#print("reward", R)
 		#print("old", self.Q(S,A,w))
-		old = self.Q(S,A,w)
-		oldweights = [w[i] for i in self.active_features(S,A)]
 		
 		# error[t]
 		error = R
@@ -147,7 +145,6 @@ class Agent:
 			# replacing traces
 		#	self.z[feature] = 1
 
-		adjusted_error = error
 		
 
 		# A[t+1]
@@ -157,13 +154,15 @@ class Agent:
 		#print(self.Q(Sprime,Aprime,self.w))
 		#print(self.Q(S,A,self.w))
 
+		old = self.Q(S,A,self.w)
+
 		error = R + self.gamma*self.Q(Sprime,Aprime,self.w) - self.Q(S,A,self.w)
 		# update eligibility trace
 		#for feature in self.active_features(Sprime,Aprime):
 			#error += self.gamma*w[feature]
 
 		adjusted_error2 = error
-		#alpha = 0.01/self.times_selected[A]
+		#alpha = 0.005/self.times_selected[A]
 		alpha = self.alpha
 		#for i in range(len(self.w)):
 		#	self.w[i] += alpha*error*self.z[i]
@@ -186,7 +185,6 @@ class Agent:
 			print("features",self.active_features(S,A))
 			print("old weights", oldweights)
 			print("new weights", [w[i] for i in self.active_features(S,A)])
-			print("error", error)
 			print("adjusted error", adjusted_error)
 			print("adjusted error 2", adjusted_error2)
 			print("####")
@@ -208,7 +206,7 @@ class Agent:
 		w = self.w
 
 		self.times_selected[A] += 1
-		#alpha = 0.01/self.times_selected[A]
+		#alpha = 0.005/self.times_selected[A]
 		alpha = self.alpha
 		#print("reward", R)
 		#print("old", self.Q(S,A,w))
